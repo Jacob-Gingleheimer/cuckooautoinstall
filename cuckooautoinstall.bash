@@ -27,7 +27,7 @@ RELEASE=$(lsb_release -cs)
 CUCKOO_USER="cuckoo"
 CUSTOM_PKGS=""
 ORIG_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}"  )" && pwd  )
-VOLATILITY_URL="http://downloads.volatilityfoundation.org/releases/2.4/volatility-2.4.tar.gz"
+VOLATILITY_URL="http://downloads.volatilityfoundation.org/releases/2.5/volatility_2.5.linux.standalone.zip"
 VIRTUALBOX_REP="deb http://download.virtualbox.org/virtualbox/debian $RELEASE contrib"
 CUCKOO_REPO='https://github.com/cuckoobox/cuckoo'
 YARA_REPO="https://github.com/plusvic/yara"
@@ -203,10 +203,11 @@ build_yara(){
 
 build_volatility(){
     wget $VOLATILITY_URL
-    tar xvf volatility-2.4.tar.gz
-    cd volatility-2.4/
-    $SUDO python setup.py build
-    $SUDO python setup.py install
+    unzip volatility_2.5.linux.standalone.zip
+    cd volatility_2.5.linux.standalone/
+    $SUDO ln ./volatility_2.5_linux_x64 /usr/sbin/vol.py
+    $SUDO chmod 777 /usr/sbin/vol.py
+    chmod 666 vol*
     return 0
 }
 
