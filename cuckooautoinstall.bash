@@ -25,7 +25,7 @@ SUDO="sudo"
 TMPDIR=$(mktemp -d)
 RELEASE=$(lsb_release -cs)
 CUCKOO_USER="cuckoo"
-CUCKOO_PASSWD="-p 4c0c0puffs!" #--disabled-password
+CUCKOO_PASSWD='--disabled-password'
 CUSTOM_PKGS=""
 ORIG_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}"  )" && pwd  )
 VOLATILITY_URL="http://downloads.volatilityfoundation.org/releases/2.5/volatility_2.5.linux.standalone.zip"
@@ -135,7 +135,7 @@ cdcuckoo(){
 }
 
 create_cuckoo_user(){
-    $SUDO adduser ${CUCKOO_PASSWD} -gec "Cuckoo Sandbox" ${CUCKOO_USER}
+    $SUDO adduser ${CUCKOO_PASSWD} -gecos "Cuckoo Sandbox" ${CUCKOO_USER}
     $SUDO usermod -G vboxusers ${CUCKOO_USER}
     return 0
 }
@@ -143,7 +143,7 @@ create_cuckoo_user(){
 clone_cuckoo(){
     cdcuckoo
     $SUDO git clone ${CUCKOO_REPO}
-    cd ${CUCKOO_REPO}
+    cd cuckoo
     [[ $STABLE ]] && $SUDO git checkout ${CUCKOO_BRANCH}
     cd ..
     $SUDO chown -R ${CUCKOO_USER}:${CUCKOO_USER} cuckoo
