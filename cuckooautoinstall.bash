@@ -238,6 +238,7 @@ install_packages(){
     $SUDO apt-get install -y ${packages["${RELEASE}"]}
     $SUDO apt-get install -y $CUSTOM_PKGS
     $SUDO apt-get -y install 
+    $SUDO apt-get autoremove
     return 0
 }
 
