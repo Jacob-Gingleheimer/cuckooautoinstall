@@ -25,12 +25,13 @@ SUDO="sudo"
 TMPDIR=$(mktemp -d)
 RELEASE=$(lsb_release -cs)
 CUCKOO_USER="cuckoo"
-CUCKOO_PASSWD = "-p 4c0c0puffs!" #--disabled-password
+CUCKOO_PASSWD="-p 4c0c0puffs!" #--disabled-password
 CUSTOM_PKGS=""
 ORIG_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}"  )" && pwd  )
 VOLATILITY_URL="http://downloads.volatilityfoundation.org/releases/2.5/volatility_2.5.linux.standalone.zip"
 VIRTUALBOX_REP="deb http://download.virtualbox.org/virtualbox/debian $RELEASE contrib"
 CUCKOO_REPO='https://github.com/cuckoobox/cuckoo'
+CUCKOO_BRANCH='2.0-rc1'
 YARA_REPO="https://github.com/plusvic/yara"
 JANSSON_REPO="https://github.com/akheron/jansson"
 
@@ -134,7 +135,7 @@ cdcuckoo(){
 }
 
 create_cuckoo_user(){
-    $SUDO adduser ${CUCKOO_PASSW}D -gecos "" ${CUCKOO_USER}
+    $SUDO adduser ${CUCKOO_PASSWD} -gec "Cuckoo Sandbox" ${CUCKOO_USER}
     $SUDO usermod -G vboxusers ${CUCKOO_USER}
     return 0
 }
@@ -143,7 +144,7 @@ clone_cuckoo(){
     cdcuckoo
     $SUDO git clone ${CUCKOO_REPO}
     cd ${CUCKOO_REPO}
-    [[ $STABLE ]] && $SUDO git checkout 5231ff3a455e9c1c36239a025a1f6840029a9ed8
+    [[ $STABLE ]] && $SUDO git checkout ${CUCKOO_BRANCH}
     cd ..
     $SUDO chown -R ${CUCKOO_USER}:${CUCKOO_USER} cuckoo
     cd $TMPDIR
