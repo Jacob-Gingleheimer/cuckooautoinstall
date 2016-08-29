@@ -41,9 +41,9 @@ UPGRADE=false
 declare -a packages
 declare -a python_packages 
 
-packages["debian"]="python-pip python-sqlalchemy mongodb python-bson python-dpkt python-jinja2 python-magic python-gridfs python-libvirt python-bottle python-pefile python-chardet git build-essential autoconf automake libtool dh-autoreconf libcurl4-gnutls-dev libmagic-dev python-dev tcpdump libcap2-bin virtualbox dkms python-pyrex"
-packages["ubuntu"]="python-pip python-sqlalchemy mongodb python-bson python-dpkt python-jinja2 python-magic python-gridfs python-libvirt python-bottle python-pefile python-chardet git build-essential autoconf automake libtool dh-autoreconf libcurl4-gnutls-dev libmagic-dev python-dev tcpdump libcap2-bin virtualbox dkms python-pyrex"
-python_packages=(pymongo django maec py3compat lxml cybox distorm3 pycrypto pydeep)
+packages["debian"]="python-pip python-sqlalchemy mongodb python-bson python-dpkt python-jinja2 python-magic python-gridfs python-libvirt python-bottle python-pefile python-chardet git build-essential autoconf automake libtool dh-autoreconf libcurl4-gnutls-dev libmagic-dev python-dev tcpdump libcap2-bin virtualbox dkms python-pyrex libfuzzy-dev"
+packages["ubuntu"]="python-pip python-sqlalchemy mongodb python-bson python-dpkt python-jinja2 python-magic python-gridfs python-libvirt python-bottle python-pefile python-chardet git build-essential autoconf automake libtool dh-autoreconf libcurl4-gnutls-dev libmagic-dev python-dev tcpdump libcap2-bin virtualbox dkms python-pyrex libfuzzy-dev"
+python_packages="pymongo django maec py3compat lxml cybox distorm3 pycrypto pydeep"
 
 # Pretty icons
 log_icon="\e[31m✓\e[0m"
@@ -219,10 +219,8 @@ build_volatility(){
 pip(){
     # TODO: Calling upgrade here should be optional.
     # Unless we make all of this into a virtualenv, wich seems like the
-    # correct way to follow
-    for package in ${python_packages[@]}; do 
-	$SUDO pip install ${package} --upgrade; 
-    done
+    # correct way to follow 
+    $SUDO -H pip install ${python_packages} --upgrade
     return 0
 }
 
@@ -266,7 +264,7 @@ run_and_log prepare_virtualbox "Getting virtualbox repo ready" "Virtualbox is ru
 run_and_log install_packages "Installing packages ${CUSTOM_PKGS} and ${packages[$RELEASE]}" "Something failed installing packages, please look at the log file"
 
 # Install python packages
-run_and_log pip ${python_packages[@]} "Installing python packages: ${python_packages[@]}" "Something failed install python packages, please look at the log file"
+run_and_log pip ${python_packages} "Installing python packages: ${python_packages}" "Something failed install python packages, please look at the log file"
 
 # Create user and clone repos
 run_and_log create_cuckoo_user "Creating cuckoo user" "Could not create cuckoo user"
