@@ -43,7 +43,7 @@ declare -a python_packages
 
 packages["debian"]="python-pip python-sqlalchemy mongodb python-bson python-dpkt python-jinja2 python-magic python-gridfs python-libvirt python-bottle python-pefile python-chardet git build-essential autoconf automake libtool dh-autoreconf libcurl4-gnutls-dev libmagic-dev python-dev tcpdump libcap2-bin virtualbox dkms python-pyrex"
 packages["ubuntu"]="python-pip python-sqlalchemy mongodb python-bson python-dpkt python-jinja2 python-magic python-gridfs python-libvirt python-bottle python-pefile python-chardet git build-essential autoconf automake libtool dh-autoreconf libcurl4-gnutls-dev libmagic-dev python-dev tcpdump libcap2-bin virtualbox dkms python-pyrex"
-python_packages=(pymongo django pydeep maec py3compat lxml cybox distorm3 pycrypto)
+python_packages=(pymongo django maec py3compat lxml cybox distorm3 pycrypto pydeep)
 
 # Pretty icons
 log_icon="\e[31m✓\e[0m"
@@ -220,7 +220,9 @@ pip(){
     # TODO: Calling upgrade here should be optional.
     # Unless we make all of this into a virtualenv, wich seems like the
     # correct way to follow
-    for package in ${@}; do $SUDO pip install ${package} --upgrade; done
+    for package in ${python_packages[@]}; do 
+	$SUDO pip install ${package} --upgrade; 
+    done
     return 0
 }
 
