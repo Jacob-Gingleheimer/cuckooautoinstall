@@ -216,6 +216,15 @@ build_volatility(){
     return 0
 }
 
+create_cuckoo(){
+    cdcuckoo
+    wget https://downloads.cuckoosandbox.org/cuckoo-current.tar.gz
+    tar -xvf cuckoo-current.tar.gz
+    $SUDO chown -R ${CUCKOO_USER}:${CUCKOO_USER} cuckoo
+    cd $TMPDIR
+    return 0
+}
+
 pip(){
     # TODO: Calling upgrade here should be optional.
     # Unless we make all of this into a virtualenv, wich seems like the
@@ -269,7 +278,7 @@ run_and_log pip ${python_packages} "Installing python packages: ${python_package
 # Create user and clone repos
 run_and_log create_cuckoo_user "Creating cuckoo user" "Could not create cuckoo user"
 run_and_log clone_repos "Cloning repositories" "Could not clone repos"
-run_and_log clone_cuckoo "Cloning cuckoo repository" "Failed"
+run_and_log create_cuckoo "Downloading cuckoo" "Failed"
 
 
 # Build packages
