@@ -273,7 +273,9 @@ run_and_log prepare_virtualbox "Getting virtualbox repo ready" "Virtualbox is ru
 run_and_log install_packages "Installing packages ${CUSTOM_PKGS} and ${packages[$RELEASE]}" "Something failed installing packages, please look at the log file"
 
 # Install python packages
+# This needs to be re-done.  It's not an elegant solution
 run_and_log pip ${python_packages} "Installing python packages: ${python_packages}" "Something failed install python packages, please look at the log file"
+pip
 
 # Create user and clone repos
 run_and_log create_cuckoo_user "Creating cuckoo user" "Could not create cuckoo user"
