@@ -2,6 +2,9 @@
 
 # CuckooAutoInstall
 
+# Rewritten and simplified for ubuntu 14.04 by Jacob Gingleheimer (JJGS) - jacob.gingleheimer@gmail.com
+
+# Using the excellent code provided by:
 # Copyright (C) 2014-2015 David Reguera García - dreg@buguroo.com
 # Copyright (C) 2015 David Francos Cuartero - dfrancos@buguroo.com
 
@@ -18,53 +21,54 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-source /etc/os-release
-
-# Configuration variables. You can override these in config.
 SUDO="sudo"
 TMPDIR=$(mktemp -d)
+chmod 777 $TMPDIR
 RELEASE=$(lsb_release -cs)
 CUCKOO_USER="cuckoo"
-CUSTOM_PKGS=""
+INSTALL_USER=$(whoami)
+CUCKOO_PASSWD="4c0c0puffs!"
+CUCKOO_REQS="/home/cuckoo/cuckoo/requirements.txt"
 ORIG_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}"  )" && pwd  )
-VOLATILITY_URL="http://downloads.volatilityfoundation.org/releases/2.4/volatility-2.4.tar.gz"
+VOLATILITY_URL="http://downloads.volatilityfoundation.org/releases/2.5/volatility_2.5.linux.standalone.zip"
 VIRTUALBOX_REP="deb http://download.virtualbox.org/virtualbox/debian $RELEASE contrib"
 CUCKOO_REPO='https://github.com/cuckoobox/cuckoo'
+CUCKOO_BRANCH="master"
 YARA_REPO="https://github.com/plusvic/yara"
 JANSSON_REPO="https://github.com/akheron/jansson"
-
-LOG=$(mktemp)
-UPGRADE=false
-
-declare -a packages
-declare -a python_packages 
-
-packages["debian"]="python-pip python-sqlalchemy mongodb python-bson python-dpkt python-jinja2 python-magic python-gridfs python-libvirt python-bottle python-pefile python-chardet git build-essential autoconf automake libtool dh-autoreconf libcurl4-gnutls-dev libmagic-dev python-dev tcpdump libcap2-bin virtualbox dkms python-pyrex"
-packages["ubuntu"]="python-pip python-sqlalchemy mongodb python-bson python-dpkt python-jinja2 python-magic python-gridfs python-libvirt python-bottle python-pefile python-chardet git build-essential autoconf automake libtool dh-autoreconf libcurl4-gnutls-dev libmagic-dev python-dev tcpdump libcap2-bin virtualbox dkms python-pyrex"
-python_packages=(pymongo django pydeep maec py3compat lxml cybox distorm3 pycrypto)
 
 # Pretty icons
 log_icon="\e[31m✓\e[0m"
 log_icon_ok="\e[32m✓\e[0m"
 log_icon_nok="\e[31m✗\e[0m"
 
-# -
 
 print_copy(){
 cat <<EO
 ┌─────────────────────────────────────────────────────────┐
-│                CuckooAutoInstall 0.2                    │
+│                CuckooAutoInstall 1.0                    │
+│   Just contributing a little bit & trying to help out   │
+│ Jacob Gingleheimer - JJGS <jacob.gingleheimer@gmail.com>│
+│                                                         │
+│ Using the code provided by:                             │
 │ David Reguera García - Dreg <dreguera@buguroo.com>      │
 │ David Francos Cuartero - XayOn <dfrancos@buguroo.com>   │
 │            Buguroo Offensive Security - 2015            │
+│                                                         │
 └─────────────────────────────────────────────────────────┘
 EO
 }
 
+# What do we need installed so that cuckoo can run?
+packages=(python-pip python-sqlalchemy mongodb python-bson python-dpkt python-jinja2 python-magic python-gridfs python-libvirt python-bottle python-pefile python-chardet git build-essential autoconf automake libtool dh-autoreconf libcurl4-gnutls-dev libmagic-dev python-dev libfuzzy-dev libfuzzy2 ssdeep tcpdump libcap2-bin virtualbox dkms python-pyrex yara python-yara libjansson4 libxml2 libxslt1-dev libxml2-dev libssl-dev)
+
+python_packages=(pymongo django maec py3compat lxml cybox distorm3 pycrypto pydeep yara-python)
+
+# Can you bring the "magic"
 check_viability(){
     [[ $UID != 0 ]] && {
         type -f $SUDO || {
-            echo "You're not root and you don't have $SUDO, please become root or install $SUDO before executing $0"
+            echo "I know root and you're no root! ... and you don't have $SUDO, please become root or install $SUDO before executing. $0"
             exit
         }
     } || {
@@ -79,11 +83,10 @@ check_viability(){
 
 print_help(){
     cat <<EOH
-Usage: $0 [--verbose|-v] [--help|-h] [--upgrade|-u]
+Usage: $0 [--verbose|-v] [--help|-h]
 
     --verbose   Print output to stdout instead of temp logfile
-    --help      This help menu
-    --upgrade   Use newer volatility, yara and jansson versions (install from source)
+    --help      This help menu ... which doesn't really help, :-P
 
 EOH
     exit 1
@@ -96,56 +99,40 @@ setopts(){
             -)
                 case "${OPTARG}" in
                     help) print_help ;;
-                    upgrade) UPGRADE=true ;;
                     verbose) LOG=/dev/stdout ;;
                 esac;;
             h) print_help ;;
             v) LOG=/dev/stdout;;
-            u) UPGRADE=true;;
         esac
     done
 }
 
-
-run_and_log(){
-    $1 &> ${LOG} && {
-        _log_icon=$log_icon_ok
-    } || {
-        _log_icon=$log_icon_nok
-        exit_=1
-    }
-    echo -e "${_log_icon} ${2}"
-    [[ $exit_ ]] && { echo -e "\t -> ${_log_icon} $3";  exit; }
-}
-
-clone_repos(){
-    git clone ${JANSSON_REPO}
-    git clone ${YARA_REPO}
-    return 0
-}
-
+#Let's get cuckoo for cocoapuffs!
 cdcuckoo(){
     eval cd ~${CUCKOO_USER}
     return 0
 }
 
 create_cuckoo_user(){
-    $SUDO adduser  --disabled-password -gecos "" ${CUCKOO_USER}
+    $SUDO adduser -gecos "Cuckoo Sandbox" ${CUCKOO_USER}
+    $SUDO echo "$CUCKOO_USER:$CUCKOO_PASSWD" | chpasswd
     $SUDO usermod -G vboxusers ${CUCKOO_USER}
     return 0
 }
 
 clone_cuckoo(){
     cdcuckoo
-    $SUDO git clone $CUCKOO_REPO
-    cd $CUCKOO_REPO
-    [[ $STABLE ]] && $SUDO git checkout 5231ff3a455e9c1c36239a025a1f6840029a9ed8
+    $SUDO git clone ${CUCKOO_REPO}
+    cd cuckoo
+    [[ $STABLE ]] && $SUDO git checkout ${CUCKOO_BRANCH}
+    CUCKOO_REQS=`pwd`"/requirements.txt"
     cd ..
     $SUDO chown -R ${CUCKOO_USER}:${CUCKOO_USER} cuckoo
     cd $TMPDIR
     return 0
 }
 
+# Networking stuff goes here:
 create_hostonly_iface(){
     $SUDO vboxmanage hostonlyif create
     $SUDO iptables -A FORWARD -o eth0 -i vboxnet0 -s 192.168.56.0/24 -m conntrack --ctstate NEW -j ACCEPT
@@ -156,23 +143,75 @@ create_hostonly_iface(){
 }
 
 setcap(){
-    $SUDO /bin/bash -c 'setcap cap_net_raw,cap_net_admin=eip /usr/sbin/tcpdump' 2>&/dev/null
+    $SUDO /bin/bash -c 'setcap cap_net_raw,cap_net_admin=eip /usr/sbin/tcpdump' 2&>/dev/null
     return 0
 }
 
-fix_django_version(){
-    cdcuckoo
-    python -c "import django; from distutils.version import LooseVersion; import sys; sys.exit(LooseVersion(django.get_version()) <= LooseVersion('1.5'))" && { 
-        egrep -i "templates = \(.*\)" cuckoo/web/web/settings.py || $SUDO sed -i '/TEMPLATE_DIRS/{ N; s/.*/TEMPLATE_DIRS = \( \("templates"\),/; }' cuckoo/web/web/settings.py
-    }
-    cd $TMPDIR
-    return 0
-}
-
+# We want the MongoDB
 enable_mongodb(){
     cdcuckoo
     $SUDO sed -i '/\[mongodb\]/{ N; s/.*/\[mongodb\]\nenabled = yes/; }' cuckoo/conf/reporting.conf
     cd $TMPDIR
+    return 0
+}
+
+# Need me some memory analysis
+build_volatility(){
+    cdcuckoo
+    #$SUDO wget -q $VOLATILITY_URL
+    $SUDO unzip -o volatility_2.5.linux.standalone.zip
+    $SUDO chmod 555 -R volatility_2.5.linux.standalone/
+    $SUDO chown -R ${CUCKOO_USER}:${INSTALL_USER} volatility_2.5.linux.standalone/
+    $SUDO ln ./volatility_2.5.linux.standalone/volatility_2.5_linux_x64 /usr/sbin/vol.py
+    $SUDO chmod 555 /usr/sbin/vol.py
+    return 0
+}
+
+# Got's to have the virutal machines
+prepare_virtualbox(){
+    cd ${TMPDIR}
+    echo ${VIRTUALBOX_REP} |$SUDO tee /etc/apt/sources.list.d/virtualbox.list
+    wget -O - https://www.virtualbox.org/download/oracle_vbox.asc | $SUDO apt-key add -
+    pgrep virtualbox && return 1
+    pgrep VBox && return 1 
+    return 0
+}
+
+# Install ALL THE THINGS!!!
+install_packages(){     
+	echo -n "Updating source directories ";     
+	$SUDO apt-get update &> ${TMPDIR}"/packages.log" || echo -e $log_icon_nok " " && echo -e $log_icon_ok " ";     
+	echo -n "Updating system ";     
+	$SUDO apt-get upgrade -y &>> ${TMPDIR}"/packages.log" || echo -e $log_icon_nok " " && echo -e $log_icon_ok " ";      
+	echo "Installing all the necessary packages for Cuckoo";    
+	for package in ${packages[@]}; do 
+		echo -n "$package"
+		echo "Installing: $package" >> ${TMPDIR}"/packages.log"
+		$SUDO apt-get install -y ${package} &>> ${TMPDIR}"/packages.log" || echo -e -n $log_icon_nok " " && {
+			echo -e -n $log_icon_ok " ";}   
+		done;
+	$SUDO apt-get autoremove -y &>> ${TMPDIR}"/packages.log"
+	echo " " 
+}
+
+# Install python packages
+install_via_pip(){
+	echo "Installing python packages via pip:"
+	echo "PIP install fun" &> ${TMPDIR}"/pip.log"
+	for package in ${python_packages[@]}; do 
+		pip_install=`grep $package -i $CUCKOO_REQS -i` 
+		[ -z "$pip_install" ] && pip_install=$package
+		echo -n $pip_install
+		$SUDO -H pip install $pip_install &>> ${TMPDIR}"/pip.log" || echo -e -n $log_icon_nok " " && {
+			echo -e -n $log_icon_ok " ";}
+		done;
+	echo " "
+} 
+
+clone_repos(){
+    cd $TMPDIR
+    git clone ${JANSSON_REPO}
+    git clone ${YARA_REPO}
     return 0
 }
 
@@ -195,88 +234,54 @@ build_yara(){
     ./configure --enable-cuckoo --enable-magic
     make
     $SUDO make install
-    cd yara-python/
-    $SUDO python setup.py install
     cd ${TMPDIR}
     return 0
 }
 
-build_volatility(){
-    wget $VOLATILITY_URL
-    tar xvf volatility-2.4.tar.gz
-    cd volatility-2.4/
-    $SUDO python setup.py build
-    $SUDO python setup.py install
-    return 0
+# This makes it look pretty.
+run_and_log(){
+    $1 &> "${TMPDIR}/$1.log" && {
+        _log_icon=$log_icon_ok
+    } || {
+        _log_icon=$log_icon_nok
+        exit_=1
+    }
+    echo -e "${_log_icon} ${2}"
+    [[ $exit_ ]] && { echo -e "\t -> ${_log_icon} $3";  exit; }
 }
 
-pip(){
-    # TODO: Calling upgrade here should be optional.
-    # Unless we make all of this into a virtualenv, wich seems like the
-    # correct way to follow
-    for package in ${@}; do $SUDO pip install ${package} --upgrade; done
-    return 0
-}
-
-prepare_virtualbox(){
-    cd ${TMPDIR}
-    echo ${VIRTUALBOX_REP} |$SUDO tee /etc/apt/sources.list.d/virtualbox.list
-    wget -O - https://www.virtualbox.org/download/oracle_vbox.asc | $SUDO apt-key add -
-    pgrep virtualbox && return 1
-    pgrep VBox && return 1 
-    return 0
-}
-
-install_packages(){
-    $SUDO apt-get update
-    $SUDO apt-get install -y ${packages["${RELEASE}"]}
-    $SUDO apt-get install -y $CUSTOM_PKGS
-    $SUDO apt-get -y install 
-    return 0
+make_some_repos(){
+	clone_repos
+	build_jansson
+	build_yara
 }
 
 # Init.
-
 print_copy
 check_viability
 setopts ${@}
 
-# Load config
-
-source config &>/dev/null
-
-echo "Logging enabled on ${LOG}"
-
-# If we're notupgrading to recent yara, jansson and volatility, install them as packages.
-[[ $UPGRADE != true ]] && {
-    CUSTOM_PKGS="volatility yara python-yara libyara3 libjansson4 ${CUSTOM_PKGS}"
-}
+# Create a log file in the current directory for easy review
+echo "Logs will be dropped in $TMPDIR"
 
 # Install packages
 run_and_log prepare_virtualbox "Getting virtualbox repo ready" "Virtualbox is running, please close it"
-run_and_log install_packages "Installing packages ${CUSTOM_PKGS} and ${packages[$RELEASE]}" "Something failed installing packages, please look at the log file"
+install_packages
 
-# Install python packages
-run_and_log pip ${python_packages[@]} "Installing python packages: ${python_packages[@]}" "Something failed install python packages, please look at the log file"
+echo "The next step requires a download and build so go enjoy a cup of [coffee, beer]. ;-)"
+run_and_log make_some_repos "Download & install Jansson & Yara repos" "Failed to install jansson & yara" 
 
-# Create user and clone repos
+# Get Cuckoo setup since we will use the cuckoo requirements.txt file in wit pip
 run_and_log create_cuckoo_user "Creating cuckoo user" "Could not create cuckoo user"
-run_and_log clone_repos "Cloning repositories" "Could not clone repos"
-run_and_log clone_cuckoo "Cloning cuckoo repository" "Failed"
+run_and_log clone_cuckoo "Downloading cuckoo" "Failed"
 
+install_via_pip
+run_and_log build_volatility "Installing volatility"
 
-# Build packages
-[[ $UPGRADE == true ]] && {
-    run_and_log build_jansson "Building and installing jansson"
-    run_and_log build_yara "Building and installing yara"
-    run_and_log build_volatility "Installing volatility"
-}
+echo "Enabling mongodb in cuckoo"
+enable_mongodb
 
-# Configuration
-run_and_log fix_django_version "Fixing django problems on old versions"
-run_and_log enable_mongodb "Enabling mongodb in cuckoo"
-
-# Networking (latest, because sometimes it crashes...)
+# Networking (last, because sometimes it crashes...)
 run_and_log create_hostonly_iface "Creating hostonly interface for cuckoo"
-run_and_log setcap "Setting capabilities"
-
+echo "Setting capabilities"
+setcap
