@@ -23,8 +23,10 @@
 
 SUDO="sudo"
 TMPDIR=$(mktemp -d)
+chmod 777 $TMPDIR
 RELEASE=$(lsb_release -cs)
 CUCKOO_USER="cuckoo"
+CUCKOO_PASSWD="4c0c0puffs!"
 CUCKOO_REQS="/home/cuckoo/cuckoo/requirements.txt"
 ORIG_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}"  )" && pwd  )
 VOLATILITY_URL="http://downloads.volatilityfoundation.org/releases/2.5/volatility_2.5.linux.standalone.zip"
@@ -55,7 +57,7 @@ EO
 }
 
 # What do we need installed so that cuckoo can run?
-packages=(python-pip python-sqlalchemy mongodb python-bson python-dpkt python-jinja2 python-magic python-gridfs python-libvirt python-bottle python-pefile python-chardet git build-essential autoconf automake libtool dh-autoreconf libcurl4-gnutls-dev libmagic-dev python-dev libfuzzy-dev tcpdump libcap2-bin virtualbox dkms python-pyrex yara python-yara libyara3 libjansson4)
+packages=(python-pip python-sqlalchemy mongodb python-bson python-dpkt python-jinja2 python-magic python-gridfs python-libvirt python-bottle python-pefile python-chardet git build-essential autoconf automake libtool dh-autoreconf libcurl4-gnutls-dev libmagic-dev python-dev libfuzzy-dev libfuzzy2 ssdeep tcpdump libcap2-bin virtualbox dkms python-pyrex yara python-yara libyara3 libjansson4)
 
 python_packages=(pymongo django maec py3compat lxml cybox distorm3 pycrypto pydeep)
 
@@ -109,7 +111,8 @@ cdcuckoo(){
 }
 
 create_cuckoo_user(){
-    $SUDO adduser ${CUCKOO_PASSWD} -gecos "Cuckoo Sandbox" ${CUCKOO_USER}
+    $SUDO adduser -gecos "Cuckoo Sandbox" ${CUCKOO_USER}
+    $SUDO echo "$CUCKOO_USER:$CUCKOO_PASSWD" | chpasswd
     $SUDO usermod -G vboxusers ${CUCKOO_USER}
     return 0
 }
@@ -151,6 +154,7 @@ enable_mongodb(){
 
 # Need me some memory analysis
 build_volatility(){
+    cdcuckoo
     wget $VOLATILITY_URL
     unzip volatility_2.5.linux.standalone.zip
     cd volatility_2.5.linux.standalone/
@@ -172,16 +176,16 @@ prepare_virtualbox(){
 
 # Install ALL THE THINGS!!!
 install_packages(){     
-	echo -n "Updating source directories "${TMPDIR}"/packages.log";     
+	echo -n "Updating source directories ";     
 	$SUDO apt-get update &> ${TMPDIR}"/packages.log" || echo -e $log_icon_nok " " && echo -e $log_icon_ok " ";     
 	echo -n "Updating system ";     
-	#$SUDO apt-get upgrade -y &>> ${TMPDIR}"/packages.log" || echo -e $log_icon_nok " " && echo -e $log_icon_ok " ";      
+	$SUDO apt-get upgrade -y &>> ${TMPDIR}"/packages.log" || echo -e $log_icon_nok " " && echo -e $log_icon_ok " ";      
 	echo "Installing all the necessary packages for Cuckoo";    
 	for package in ${packages[@]}; do 
 		echo -n "$package"
 		echo "Installing: $package" >> ${TMPDIR}"/packages.log"
-		#$SUDO apt-get install -y ${1} &>> ${TMPDIR}"/packages.log" || echo -e -n $log_icon_nok " " && {
-		#	echo -e -n $log_icon_ok " ";}   
+		$SUDO apt-get install -y ${1} &>> ${TMPDIR}"/packages.log" || echo -e -n $log_icon_nok " " && {
+			echo -e -n $log_icon_ok " ";}   
 		done;
 	echo " " 
 }
@@ -189,13 +193,14 @@ install_packages(){
 # Install python packages
 install_via_pip(){
 	echo "Installing python packages via pip:"
+	echo "PIP install fun" &> ${TMPDIR}"/pip.log"
 	for package in ${python_packages[@]}; do 
 		pip_install=`grep $package -i $CUCKOO_REQS -i` 
 		[ -z "$pip_install" ] && pip_install=$package
 		echo -n $pip_install
 		$SUDO -H pip install $pip_install &>> ${TMPDIR}"/pip.log" || echo -e -n $log_icon_nok " " && {
 			echo -e -n $log_icon_ok " ";}
-	done;
+		done;
 	echo " "
 } 
 
@@ -228,7 +233,7 @@ run_and_log create_cuckoo_user "Creating cuckoo user" "Could not create cuckoo u
 run_and_log clone_cuckoo "Downloading cuckoo" "Failed"
 
 install_via_pip
-run_and_log build_volatility "Installing volatility"
+#run_and_log build_volatility "Installing volatility"
 
 run_and_log enable_mongodb "Enabling mongodb in cuckoo"
 
