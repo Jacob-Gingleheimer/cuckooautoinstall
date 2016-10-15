@@ -25,13 +25,12 @@ SUDO="sudo"
 TMPDIR=$(mktemp -d)
 RELEASE=$(lsb_release -cs)
 CUCKOO_USER="cuckoo"
-LOG="cuckooAutoinstall.log"
 CUCKOO_REQS="/home/cuckoo/cuckoo/requirements.txt"
 ORIG_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}"  )" && pwd  )
 VOLATILITY_URL="http://downloads.volatilityfoundation.org/releases/2.5/volatility_2.5.linux.standalone.zip"
 VIRTUALBOX_REP="deb http://download.virtualbox.org/virtualbox/debian $RELEASE contrib"
 CUCKOO_REPO='https://github.com/cuckoobox/cuckoo'
-CUCKOO_BRANCH= "master"
+CUCKOO_BRANCH="master"
 
 # Pretty icons
 log_icon="\e[31m✓\e[0m"
@@ -56,7 +55,7 @@ EO
 }
 
 # What do we need installed so that cuckoo can run?
-packages=(python-pip python-sqlalchemy mongodb python-bson python-dpkt python-jinja2 python-magic python-gridfs python-libvirt python-bottle python-pefile python-chardet git build-essential autoconf automake libtool dh-autoreconf libcurl4-gnutls-dev libmagic-dev python-dev tcpdump libcap2-bin virtualbox dkms python-pyrex yara python-yara libyara3 libjansson4)
+packages=(python-pip python-sqlalchemy mongodb python-bson python-dpkt python-jinja2 python-magic python-gridfs python-libvirt python-bottle python-pefile python-chardet git build-essential autoconf automake libtool dh-autoreconf libcurl4-gnutls-dev libmagic-dev python-dev libfuzzy-dev tcpdump libcap2-bin virtualbox dkms python-pyrex yara python-yara libyara3 libjansson4)
 
 python_packages=(pymongo django maec py3compat lxml cybox distorm3 pycrypto pydeep)
 
@@ -118,9 +117,9 @@ create_cuckoo_user(){
 clone_cuckoo(){
     cdcuckoo
     $SUDO git clone ${CUCKOO_REPO}
-    cdcuckoo
+    cd cuckoo
     [[ $STABLE ]] && $SUDO git checkout ${CUCKOO_BRANCH}
-    CUCKOO_REQS=`pwd`"/cuckoo/requirements.txt"
+    CUCKOO_REQS=`pwd`"/requirements.txt"
     cd ..
     $SUDO chown -R ${CUCKOO_USER}:${CUCKOO_USER} cuckoo
     cd $TMPDIR
@@ -173,16 +172,16 @@ prepare_virtualbox(){
 
 # Install ALL THE THINGS!!!
 install_packages(){     
-	echo -n "Updating source directories ";     
-	$SUDO apt-get update &>> ${LOG} || echo -e $log_icon_nok " " && echo -e $log_icon_ok " ";     
+	echo -n "Updating source directories "${TMPDIR}"/packages.log";     
+	$SUDO apt-get update &> ${TMPDIR}"/packages.log" || echo -e $log_icon_nok " " && echo -e $log_icon_ok " ";     
 	echo -n "Updating system ";     
-	$SUDO apt-get upgrade -y &>> ${LOG} || echo -e $log_icon_nok " " && echo -e $log_icon_ok " ";      
+	#$SUDO apt-get upgrade -y &>> ${TMPDIR}"/packages.log" || echo -e $log_icon_nok " " && echo -e $log_icon_ok " ";      
 	echo "Installing all the necessary packages for Cuckoo";    
 	for package in ${packages[@]}; do 
 		echo -n "$package"
-		echo "Installing: $package" >> ${LOG}
-		$SUDO apt-get install -y ${1} &>> ${LOG} || echo -e -n $log_icon_nok " " && {
-			echo -e -n $log_icon_ok " ";}   
+		echo "Installing: $package" >> ${TMPDIR}"/packages.log"
+		#$SUDO apt-get install -y ${1} &>> ${TMPDIR}"/packages.log" || echo -e -n $log_icon_nok " " && {
+		#	echo -e -n $log_icon_ok " ";}   
 		done;
 	echo " " 
 }
@@ -194,7 +193,7 @@ install_via_pip(){
 		pip_install=`grep $package -i $CUCKOO_REQS -i` 
 		[ -z "$pip_install" ] && pip_install=$package
 		echo -n $pip_install
-		$SUDO -H pip install $pip_install &>> ${LOG} || echo -e -n $log_icon_nok " " && {
+		$SUDO -H pip install $pip_install &>> ${TMPDIR}"/pip.log" || echo -e -n $log_icon_nok " " && {
 			echo -e -n $log_icon_ok " ";}
 	done;
 	echo " "
@@ -202,7 +201,7 @@ install_via_pip(){
 
 # This makes it look pretty.
 run_and_log(){
-    $1 &>> ${LOG} && {
+    $1 &> "${TMPDIR}/$1.log" && {
         _log_icon=$log_icon_ok
     } || {
         _log_icon=$log_icon_nok
@@ -218,8 +217,7 @@ check_viability
 setopts ${@}
 
 # Create a log file in the current directory for easy review
-echo "Logging enabled on ${LOG}"
-echo `date --rfc-3339=seconds` "Cuckoo Autoinstall" > $LOG
+echo "Logs will be dropped in $TMPDIR"
 
 # Install packages
 run_and_log prepare_virtualbox "Getting virtualbox repo ready" "Virtualbox is running, please close it"
