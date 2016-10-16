@@ -113,7 +113,7 @@ cdcuckoo(){
 }
 
 create_cuckoo_user(){
-    $SUDO adduser --disabled-password --gecos GECOS ${CUCKOO_USER}
+    $SUDO adduser --disabled-password --gecos "Cuckoo Sandbox" ${CUCKOO_USER}
     $SUDO usermod -G vboxusers ${CUCKOO_USER}
     return 0
 }
