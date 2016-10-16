@@ -14,15 +14,16 @@ What does that mean?
 It means that you can throw any suspicious file at it and get a report with
 details about the file's behavior inside an isolated environment.
 
-We created this at `Buguroo Offensive Security <http://www.buguroo.com>`_ initially to make the painful
-cuckoo installation quicker, easier and painless
+The original file was created by the team at `Buguroo Offensive Security <http://www.buguroo.com>`_  to make
+the initial installation quicker, easier and a little less painful.
+
+I have since "improved" the script by adding Volatility 2.5 and generating more log files (to troubleshoot any errors/issues).
 
 Supported systems
 -----------------
 
-Most of this script is not distro dependant (tough of course you've got to run
-it on GNU/Linux), but package installation, at this moment supports only
-debian derivatives.
+This script is designed for Ubuntu 14.04 and worked for me on 1 October 2016.  I think it will work on Debian, but no
+guarantees.  
 
 Also, given that we use the propietary virtualbox version (most of the time OSE
 edition doesn't fulfill our needs), this script requires that they've got
@@ -32,6 +33,8 @@ unsupported ones.
 
 Authors
 -------
+
+`John Jacob Gingleheimer Schmidt - JJGS <https://github.com/Jacob-Gingleheimer>`_ - `jacob.gingleheimer@gmail.com <mailto:jacob.gingleheimer@gmail.com>`_
 
 `David Reguera García - Dreg <http://github.com/David-Reguera-Garcia-Dreg>`_ - `dreguera@buguroo.com <mailto:dreguera@buguroo.com>`_ - `@fr33project <https://twitter.com/fr33project>`_ 
 
@@ -52,7 +55,8 @@ execute as a normal user if you've got sudo configured:
 
 ::
 
-    wget -O - https://raw.githubusercontent.com/buguroo/cuckooautoinstall/master/cuckooautoinstall.bash | bash
+    wget -O - https://raw.githubusercontent.com/jacob-gingleheimer/cuckooautoinstall/master/cuckooautoinstall.bash | bash
+
 
 
 The script does accept a configuration file in the form of a simple
