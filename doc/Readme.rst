@@ -46,7 +46,7 @@ Quickstart guide
 
 * Clone this repo & execute the script: *bash cuckooautoinstall.bash*
 
-.. image:: /../screenshots/cuckooautoinstall.png?raw=true
+.. image:: https://github.com/Jacob-Gingleheimer/cuckooautoinstall/blob/master/doc/Cropped%20CuckooAutoInstall%201.0.png
 
 
 If you trust us, your network setup and a lot of more variables enough
