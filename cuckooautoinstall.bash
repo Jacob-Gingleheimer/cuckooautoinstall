@@ -81,7 +81,7 @@ check_viability(){
 }
 
 print_help(){
-    cat <<EOH
+1    cat <<EOH
 Usage: $0 [--verbose|-v] [--help|-h]
 
     --verbose   Print output to stdout instead of temp logfile
@@ -156,7 +156,7 @@ enable_mongodb(){
 # Need me some memory analysis
 build_volatility(){
     cdcuckoo
-    #$SUDO wget -q $VOLATILITY_URL
+    $SUDO wget -q $VOLATILITY_URL
     $SUDO unzip -o volatility_2.5.linux.standalone.zip
     $SUDO chmod 555 -R volatility_2.5.linux.standalone/
     $SUDO chown -R ${CUCKOO_USER}:${INSTALL_USER} volatility_2.5.linux.standalone/
