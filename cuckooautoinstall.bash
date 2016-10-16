@@ -27,7 +27,6 @@ chmod 777 $TMPDIR
 RELEASE=$(lsb_release -cs)
 CUCKOO_USER="cuckoo"
 INSTALL_USER=$(whoami)
-CUCKOO_PASSWD="4c0c0puffs!"
 CUCKOO_REQS="/home/cuckoo/cuckoo/requirements.txt"
 ORIG_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}"  )" && pwd  )
 VOLATILITY_URL="http://downloads.volatilityfoundation.org/releases/2.5/volatility_2.5.linux.standalone.zip"
@@ -114,8 +113,7 @@ cdcuckoo(){
 }
 
 create_cuckoo_user(){
-    $SUDO adduser -gecos "Cuckoo Sandbox" ${CUCKOO_USER}
-    $SUDO echo "$CUCKOO_USER:$CUCKOO_PASSWD" | chpasswd
+    $SUDO adduser --disabled-password --gecos GECOS ${CUCKOO_USER}
     $SUDO usermod -G vboxusers ${CUCKOO_USER}
     return 0
 }
