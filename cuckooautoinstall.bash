@@ -264,9 +264,9 @@ echo "Logs will be dropped in $TMPDIR"
 
 # Install packages
 run_and_log prepare_virtualbox "Getting virtualbox repo ready" "Virtualbox is running, please close it"
-install_packages
+echo 'The next steps can take a loooooong time so go enjoy a cup of "beverage" or take a walk. ;-)'
 
-echo "The next step requires a download and build so go enjoy a cup of [coffee, beer]. ;-)"
+install_packages
 run_and_log make_some_repos "Download & install Jansson & Yara repos" "Failed to install jansson & yara" 
 
 # Get Cuckoo setup since we will use the cuckoo requirements.txt file in wit pip
