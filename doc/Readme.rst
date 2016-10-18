@@ -81,7 +81,7 @@ bash script with options such as:
 
 If you want to change any of these variables, download and tweak as you see fit.
 
-It doesn't accept parameters
+It doesn't accept parameters. **DEALL** :-P
 
 ::
 
@@ -130,7 +130,11 @@ CONGRATS! You have successfully installed Cuckoo Sandbox.  You have finished ste
   cd ~cuckoo/cuckoo
   python cuckoo.py
 
-.. image:: /../screenshots/github%20cuckoo%20working.png?raw=true
+.. image::  https://github.com/Jacob-Gingleheimer/cuckooautoinstall/blob/master/doc/Cropped%20Cuckoo%20first%20launch.png 
+* And if you want all the community created goodies, execute one or both of the following commands
+::
+
+  ./utils/community.py -wafb monitor` or `./utils/community.py -waf
 
 
 * Execute also django using port 6969
@@ -167,23 +171,7 @@ Enables run *tcpdump* from nonroot user
     sudo apt-get -y install libcap2-bin
     sudo setcap cap_net_raw,cap_net_admin=eip /usr/sbin/tcpdump
 
-Fixes the *"TEMPLATE_DIRS setting must be a tuple"* error when running python manage.py from the *DJANGO version >= 1.6*. Replacing in *web/web/settings.py*
-
-::
-
-        TEMPLATE_DIRS = (
-            "templates"
-        )
-
-
-becomes
-
-::
-
-        TEMPLATE_DIRS = (
-            ("templates"),
-        )
-
+Again CONGRATS! You have successfully installed Cuckoo Sandbox.  You have finished step 2 in setting up the host.  Continue along with the host `configuration <http://docs.cuckoosandbox.org/en/latest/installation/host/configuration/>`_ 
 
 Install cuckoo as daemon
 ==========================
