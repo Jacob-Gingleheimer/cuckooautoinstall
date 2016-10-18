@@ -66,43 +66,46 @@ bash script with options such as:
 
     SUDO="sudo"
     TMPDIR=$(mktemp -d)
+    chmod 777 $TMPDIR
     RELEASE=$(lsb_release -cs)
     CUCKOO_USER="cuckoo"
-    CUSTOM_PKGS=""
-    ORIG_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}"   )" && pwd   )
-    VOLATILITY_URL="http://downloads.volatilityfoundation.org/releases/2.4/volatility-2.4.tar.gz"
+    INSTALL_USER=$(whoami)
+    CUCKOO_REQS="/home/cuckoo/cuckoo/requirements.txt"
+    ORIG_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}"  )" && pwd  )
+    VOLATILITY_URL="http://downloads.volatilityfoundation.org/releases/2.5/volatility_2.5.linux.standalone.zip"
     VIRTUALBOX_REP="deb http://download.virtualbox.org/virtualbox/debian $RELEASE contrib"
     CUCKOO_REPO='https://github.com/cuckoobox/cuckoo'
+    CUCKOO_BRANCH="master"
     YARA_REPO="https://github.com/plusvic/yara"
     JANSSON_REPO="https://github.com/akheron/jansson"
 
-    LOG=$(mktemp)
-    UPGRADE=false
+If you want to change any of these variables, download and tweak as you see fit.
 
-You can override any of these variables in the config file.
-
-It accepts parameters
+It doesn't accept parameters
 
 ::
 
     ┌─────────────────────────────────────────────────────────┐
-    │                CuckooAutoInstall 0.2                    │
+    │                CuckooAutoInstall 1.0                    │
+    │   Just contributing a little bit & trying to help out   │
+    │ Jacob Gingleheimer - JJGS <jacob.gingleheimer@gmail.com>│
+    │                                                         │
+    │ Using the code provided by:                             │
     │ David Reguera García - Dreg <dreguera@buguroo.com>      │
     │ David Francos Cuartero - XayOn <dfrancos@buguroo.com>   │
     │            Buguroo Offensive Security - 2015            │
+    │                                                         │
     └─────────────────────────────────────────────────────────┘
-    Usage: cuckooautoinstall.bash [--verbose|-v] [--help|-h] [--upgrade|-u]
+    Usage: cuckooautoinstall.bash 
+     **NOTE**  There is no help.  It either works or it don't :-P
 
-        --verbose   Print output to stdout instead of temp logfile
-        --help      This help menu
-        --upgrade   Use newer volatility, yara and jansson versions (install from source)
-
-For most setups, --upgrade is recommended always.
+CONGRATS! You have successfully installed Cuckoo Sandbox.  You have finished step 2 in setting up the host.  Continue along here: `Configuration <http://docs.cuckoosandbox.org/en/latest/installation/host/configuration/>`_     
 
 * Add a password (as root) for the user *'cuckoo'* created by the script
 
 ::
 
+    sudo bash
     passwd cuckoo
 
 * Create the virtual machines `http://docs.cuckoosandbox.org/en/latest/installation/guest/`
